@@ -38,22 +38,24 @@ public class Client implements Runnable {
     }
 
     public boolean buy(Company company, double numberOfShares) {
-        double availableShares = company.getAvailableShares();
-        double totalPrice = company.getPrice() * numberOfShares;
-        // Check if balance is enough and if company has enough shares.
-        if (balance >= totalPrice && availableShares >= numberOfShares) {
-            // Update availableShares in company.
-            company.setAvailableShares(availableShares - numberOfShares);
-            // Update company in Hash Map.
-            if (shares.containsKey(company)) {
-                shares.put(company, shares.get(company) + numberOfShares);
-            } else {
-                shares.put(company, numberOfShares);
+        synchronized (Client.class) {
+            double availableShares = company.getAvailableShares();
+            double totalPrice = company.getPrice() * numberOfShares;
+            // Check if balance is enough and if company has enough shares.
+            if (balance >= totalPrice && availableShares >= numberOfShares) {
+                // Update availableShares in company.
+                company.setAvailableShares(availableShares - numberOfShares);
+                // Update company in Hash Map.
+                if (shares.containsKey(company)) {
+                    shares.put(company, shares.get(company) + numberOfShares);
+                } else {
+                    shares.put(company, numberOfShares);
+                }
+                balance -= totalPrice;
+                return true;
             }
-            balance -= totalPrice;
-            return true;
+            return false;
         }
-        return false;
     }
 
     public boolean sell(Company company, double numberOfShares) {
