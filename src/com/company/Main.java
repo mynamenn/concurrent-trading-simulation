@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
-        Company google = new Company("Google", 2000000, 2000000, 1);
+        Company google = new Company("Google", 1000, 1000, 1);
         Company facebook = new Company("Facebook", 2000000, 2000000, 1);
         Client lawrence = new Client(1000000000);
         Client john = new Client(1000000000);

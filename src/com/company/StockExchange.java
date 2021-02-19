@@ -13,7 +13,7 @@ public class StockExchange {
         clients = new ArrayList<>();
     }
 
-    public boolean registerCompany(Company company, double numberOfShares) {
+    public synchronized boolean registerCompany(Company company, double numberOfShares) {
         // Check if company is in Hash Map.
         if (!companies.containsKey(company)) {
             companies.put(company, numberOfShares);
@@ -22,7 +22,7 @@ public class StockExchange {
         return false;
     }
 
-    public boolean deregisterCompany(Company company) {
+    public synchronized boolean deregisterCompany(Company company) {
         // Check if company is in Hash Map.
         if (companies.containsKey(company)) {
             companies.remove(company);
@@ -31,7 +31,7 @@ public class StockExchange {
         return false;
     }
 
-    public boolean addClient(Client client) {
+    public synchronized boolean addClient(Client client) {
         // Check if client is in array list.
         if (!clients.contains(client)) {
             clients.add(client);
@@ -40,7 +40,7 @@ public class StockExchange {
         return false;
     }
 
-    public boolean removeClient(Client client) {
+    public synchronized boolean removeClient(Client client) {
         // Check if client is in array list.
         if (clients.contains(client)) {
             clients.remove(client);

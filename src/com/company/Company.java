@@ -16,7 +16,7 @@ public class Company {
         this.price = price;
     }
 
-    public void setName(String name) {
+    public synchronized void setName(String name) {
         this.name = name;
     }
 
@@ -24,7 +24,7 @@ public class Company {
         return name;
     }
 
-    public void setTotalShares(double number) {
+    public synchronized void setTotalShares(double number) {
         this.totalNumberOfShares = number;
     }
 
@@ -32,7 +32,7 @@ public class Company {
         return totalNumberOfShares;
     }
 
-    public void setAvailableShares(double number) {
+    public synchronized void setAvailableShares(double number) {
         this.availableNumberOfShares = number;
     }
 
@@ -44,7 +44,7 @@ public class Company {
         return price;
     }
 
-    public void setPrice(double number) {
+    public synchronized void setPrice(double number) {
         price = number;
     }
 }
