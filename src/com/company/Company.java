@@ -3,13 +3,13 @@ package com.company;
 public class Company {
     private String name;
 
-    private double totalNumberOfShares;
+    private float totalNumberOfShares;
 
-    private double availableNumberOfShares;
+    private float availableNumberOfShares;
 
-    private double price;
+    private float price;
 
-    public Company(String name, double totalNumberOfShares, double availableNumberOfShares, double price) {
+    public Company(String name, float totalNumberOfShares, float availableNumberOfShares, float price) {
         this.name = name;
         this.totalNumberOfShares = totalNumberOfShares;
         this.availableNumberOfShares = availableNumberOfShares;
@@ -24,27 +24,27 @@ public class Company {
         return name;
     }
 
-    public synchronized void setTotalShares(double number) {
+    public synchronized void setTotalShares(float number) {
         this.totalNumberOfShares = number;
     }
 
-    public double getTotalShares() {
+    public float getTotalShares() {
         return totalNumberOfShares;
     }
 
-    public synchronized void setAvailableShares(double number) {
+    public synchronized void setAvailableShares(float number) {
         this.availableNumberOfShares = number;
     }
 
-    public double getAvailableShares() {
+    public float getAvailableShares() {
         return availableNumberOfShares;
     }
 
-    public double getPrice() {
+    public float getPrice() {
         return price;
     }
 
-    public synchronized void setPrice(double number) {
+    public synchronized void setPrice(float number) {
         price = number;
     }
 }

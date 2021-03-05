@@ -3,29 +3,33 @@ package com.company;
 import java.util.HashMap;
 
 public class Client implements Runnable {
-    private HashMap<Company, Double> shares;
+    private StockExchange stockExchange;
 
-    private double balance;
+    private HashMap<Company, Float> shares;
 
-    public Client(double balance) {
+    private String name;
+
+    private float balance;
+
+    public Client(String name, float balance, StockExchange stockExchange) {
         shares = new HashMap<>();
+        this.name = name;
         this.balance = balance;
+        this.stockExchange = stockExchange;
     }
 
     @Override
     // Simulate buying of stocks.
     public void run() {
-        boolean autoBuy = false;
-        boolean autoSell = false;
+        System.out.println(name + "'s thread started.");
         for (Company company : shares.keySet()) {
+            // Set target for buyLow and sellHigh.
+//            buyLow(company, 1, (float) 0.8);
+            sellHigh(company, 1, (float) 1.3);
+            // Keep buying shares.
             for (int i=0; i<499; i++) {
-                if (!autoSell && sellHigh(company, 1, 1.3)) {
-                    autoSell = true;
-                }
-                if (!autoBuy && buyLow(company, 1, 0.8)) {
-                    autoBuy = true;
-                }
                 buy(company, 1);
+                System.out.println("HI");
 //                try {
 //                    int randomNum = (int) (Math.random() * 100);
 //                    Thread.sleep(randomNum);
@@ -37,12 +41,12 @@ public class Client implements Runnable {
         }
     }
 
-    public HashMap<Company, Double> getStocks() {
+    public HashMap<Company, Float> getStocks() {
         return shares;
     }
 
     // Instance level synchronization.
-    public synchronized boolean setStocks(Company company, double numberOfShares) {
+    public synchronized boolean setStocks(Company company, float numberOfShares) {
         // Check if company is in Hash Map.
         if (!shares.containsKey(company)) {
             shares.put(company, numberOfShares);
@@ -54,11 +58,11 @@ public class Client implements Runnable {
     }
 
     // Stock price increases for each buy.
-    public boolean buy(Company company, double numberOfShares) {
+    public boolean buy(Company company, float numberOfShares) {
         // Class level synchronization.
         synchronized (Client.class) {
-            double availableShares = company.getAvailableShares();
-            double totalPrice = company.getPrice() * numberOfShares;
+            float availableShares = company.getAvailableShares();
+            float totalPrice = company.getPrice() * numberOfShares;
             // Check if balance is enough and if company has enough shares.
             if (balance >= totalPrice && availableShares >= numberOfShares) {
                 // Update availableShares in company.
@@ -71,7 +75,7 @@ public class Client implements Runnable {
                 }
                 balance -= totalPrice;
                 // Increase stock price by 10 percent.
-                company.setPrice(company.getPrice() * 1.1);
+                stockExchange.changePriceBy(company, (float) (company.getPrice() * 1.1));
                 return true;
             }
             return false;
@@ -79,7 +83,7 @@ public class Client implements Runnable {
     }
 
     // Stock price decreases with each sell.
-    public boolean sell(Company company, double numberOfShares) {
+    public boolean sell(Company company, float numberOfShares) {
         // Class level synchronization.
         synchronized (Client.class) {
             // Check if client has enough shares.
@@ -87,7 +91,7 @@ public class Client implements Runnable {
                 company.setAvailableShares(company.getAvailableShares() + numberOfShares);
                 balance += company.getPrice() * numberOfShares;
                 // Decrease stock price by 10 percent.
-                company.setPrice(company.getPrice() * 0.9);
+                stockExchange.changePriceBy(company, (float) (company.getPrice() * 0.9));
                 return true;
             }
             return false;
@@ -95,29 +99,43 @@ public class Client implements Runnable {
     }
 
     // Buy the stock when its price hits the limit.
-    public boolean buyLow(Company company, double numberOfShares, double limit) {
-        if (company.getPrice() <= limit) {
-            return buy(company, numberOfShares);
+    public synchronized boolean buyLow(Company company, float numberOfShares, float limit) {
+        while(company.getPrice() > limit) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        return false;
+        boolean isBought = buy(company, numberOfShares);
+        System.out.println(isBought? name + " auto-bought " + company.getName(): name + " failed to auto-buy " + company.getName());
+        notifyAll();
+        return isBought;
     }
 
     // Sell the stock when its price hits the limit.
-    public boolean sellHigh(Company company, double numberOfShares, double limit) {
-        if (company.getPrice() >= limit) {
-            return sell(company, numberOfShares);
+    public synchronized boolean sellHigh(Company company, float numberOfShares, float limit) {
+        while(company.getPrice() < limit) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        return false;
+        boolean isSold = sell(company, numberOfShares);
+        System.out.println(isSold? name + " auto-sold " + company.getName(): name + " failed to auto-sell " + company.getName());
+        notifyAll();
+        return isSold;
     }
 
     // Instance level synchronization.
-    public synchronized boolean deposit(double amount) {
+    public synchronized boolean deposit(float amount) {
         balance += amount;
         return true;
     }
 
     // Instance level synchronization.
-    public synchronized boolean withdraw(double amount) {
+    public synchronized boolean withdraw(float amount) {
         // Check if balance is >= amount.
         if (balance >= amount) {
             balance -= amount;

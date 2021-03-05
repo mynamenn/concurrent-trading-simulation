@@ -5,16 +5,16 @@ import java.util.HashMap;
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
+        StockExchange stockExchange = new StockExchange();
         Company google = new Company("Google", 1000, 1000, 1);
         Company facebook = new Company("Facebook", 2000000, 2000000, 1);
-        Client lawrence = new Client(1000000000);
-        Client john = new Client(1000000000);
+        Client lawrence = new Client("Lawrence", 1000000000, stockExchange);
+        Client john = new Client("John", 1000000000, stockExchange);
 
-        StockExchange stockExchange = new StockExchange();
         stockExchange.addClient(lawrence);
         stockExchange.addClient(john);
-        stockExchange.registerCompany(google, google.getAvailableShares());
-        stockExchange.registerCompany(facebook, facebook.getAvailableShares());
+        stockExchange.registerCompany(google, (float) google.getAvailableShares());
+        stockExchange.registerCompany(facebook, (float) facebook.getAvailableShares());
 
         lawrence.buy(google, 1);
         john.buy(google,1);
@@ -27,11 +27,11 @@ public class Main {
         lawThread.join();
         johnThread.join();
 
-        HashMap<Company, Double> johnShares = john.getStocks();
+        HashMap<Company, Float> johnShares = john.getStocks();
         for (Company company : johnShares.keySet()) {
             System.out.println(company.getName() + " : " + company.getAvailableShares());
         }
-        HashMap<Company, Double> lawShares = lawrence.getStocks();
+        HashMap<Company, Float> lawShares = lawrence.getStocks();
         for (Company company : lawShares.keySet()) {
             System.out.println(company.getName() + " : " + company.getAvailableShares());
         }

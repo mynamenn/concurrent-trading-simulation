@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class StockExchange {
-    private HashMap<Company, Double> companies;
+    private HashMap<Company, Float> companies;
 
     private ArrayList<Client> clients;
 
@@ -13,7 +13,7 @@ public class StockExchange {
         clients = new ArrayList<>();
     }
 
-    public synchronized boolean registerCompany(Company company, double numberOfShares) {
+    public synchronized boolean registerCompany(Company company, float numberOfShares) {
         // Check if company is in Hash Map.
         if (!companies.containsKey(company)) {
             companies.put(company, numberOfShares);
@@ -47,5 +47,21 @@ public class StockExchange {
             return true;
         }
         return false;
+    }
+
+    public ArrayList<Client> getClients() {
+        return clients;
+    }
+
+    public HashMap<Company, Float> getCompanies() {
+        return companies;
+    }
+
+    public synchronized void setPrice(Company company, float price) {
+        companies.put(company, price);
+    }
+
+    public synchronized void changePriceBy(Company company, float price) {
+        companies.put(company, companies.get(company) + price);
     }
 }
