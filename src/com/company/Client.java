@@ -23,13 +23,10 @@ public class Client implements Runnable {
     public void run() {
         System.out.println(name + "'s thread started.");
         for (Company company : shares.keySet()) {
-            // Set target for buyLow and sellHigh.
-//            buyLow(company, 1, (float) 0.8);
-            sellHigh(company, 1, (float) 1.3);
-            // Keep buying shares.
-            for (int i=0; i<499; i++) {
-                buy(company, 1);
-                System.out.println("HI");
+            // John buy more shares.
+            if (name.equals("John")) {
+                for (int i=0; i<5; i++) {
+                    buy(company, 1);
 //                try {
 //                    int randomNum = (int) (Math.random() * 100);
 //                    Thread.sleep(randomNum);
@@ -37,6 +34,9 @@ public class Client implements Runnable {
 //                    e.printStackTrace();
 //                }
 //                sell(company, 1);
+                }
+            } else {
+                sellHigh(company, 1, (float) 1.3);
             }
         }
     }
@@ -75,7 +75,7 @@ public class Client implements Runnable {
                 }
                 balance -= totalPrice;
                 // Increase stock price by 10 percent.
-                stockExchange.changePriceBy(company, (float) (company.getPrice() * 1.1));
+                stockExchange.changePriceBy(company, (float) (company.getPrice() * 0.1));
                 return true;
             }
             return false;
@@ -115,6 +115,7 @@ public class Client implements Runnable {
 
     // Sell the stock when its price hits the limit.
     public synchronized boolean sellHigh(Company company, float numberOfShares, float limit) {
+        System.out.println(name + " created sellHigh");
         while(company.getPrice() < limit) {
             try {
                 wait();
@@ -123,7 +124,7 @@ public class Client implements Runnable {
             }
         }
         boolean isSold = sell(company, numberOfShares);
-        System.out.println(isSold? name + " auto-sold " + company.getName(): name + " failed to auto-sell " + company.getName());
+        System.out.println(isSold? name + " auto-sold " + company.getName() + " for " + company.getPrice(): name + " failed to auto-sell " + company.getName());
         notifyAll();
         return isSold;
     }

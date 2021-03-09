@@ -58,10 +58,10 @@ public class StockExchange {
     }
 
     public synchronized void setPrice(Company company, float price) {
-        companies.put(company, price);
+        company.setPrice(price);
     }
 
     public synchronized void changePriceBy(Company company, float price) {
-        companies.put(company, companies.get(company) + price);
+        setPrice(company, company.getPrice() + price);
     }
 }

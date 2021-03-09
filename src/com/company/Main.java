@@ -10,6 +10,7 @@ public class Main {
         Company facebook = new Company("Facebook", 2000000, 2000000, 1);
         Client lawrence = new Client("Lawrence", 1000000000, stockExchange);
         Client john = new Client("John", 1000000000, stockExchange);
+        Client max = new Client("Max", 1000000000, stockExchange);
 
         stockExchange.addClient(lawrence);
         stockExchange.addClient(john);
@@ -18,14 +19,17 @@ public class Main {
 
         lawrence.buy(google, 1);
         john.buy(google,1);
-
+        max.buy(google,1);
         Thread lawThread = new Thread(lawrence);
         Thread johnThread = new Thread(john);
+        Thread maxThread = new Thread(max);
 
         lawThread.start();
         johnThread.start();
+        maxThread.start();
         lawThread.join();
         johnThread.join();
+        maxThread.join();
 
         HashMap<Company, Float> johnShares = john.getStocks();
         for (Company company : johnShares.keySet()) {
