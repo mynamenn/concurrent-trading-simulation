@@ -62,6 +62,11 @@ public class StockExchange {
     }
 
     public synchronized void changePriceBy(Company company, float price) {
-        setPrice(company, company.getPrice() + price);
+        if (company.getPrice() + price >= 0) {
+            System.out.println("Changed " + company.getName() + "'s price to " + (company.getPrice() + price));
+            setPrice(company, company.getPrice() + price);
+        } else {
+            System.out.println("Cannot set " + company.getName() + "'s price to a negative value");
+        }
     }
 }
