@@ -16,6 +16,13 @@ public class Company {
         this.price = price;
     }
 
+    public Company() {
+        name = "TEST";
+        totalNumberOfShares = 0;
+        availableNumberOfShares = 0;
+        price = 0;
+    }
+
     public synchronized void setName(String name) {
         this.name = name;
     }

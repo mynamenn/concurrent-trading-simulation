@@ -3,9 +3,11 @@ package com.company;
 import java.util.HashMap;
 
 public class Client implements Runnable {
-    private final int INCREASE_POINT = 80000;
+    private final int TRIGGER_POINT = 80000;
 
-    private final int INCREASE_FACTOR = 80000;
+    private final float INCREASE_FACTOR = (float) 1.3;
+
+    private final float DECREASE_FACTOR = (float) -0.2;
 
     private StockExchange stockExchange;
 
@@ -17,7 +19,6 @@ public class Client implements Runnable {
 
     private TestCases testCases = new TestCases();
 
-    // Class level lock for sellHigh and buyLow.
     private static Object lock = new Object();
 
     public Client(String name, float balance, StockExchange stockExchange) {
@@ -27,19 +28,35 @@ public class Client implements Runnable {
         this.stockExchange = stockExchange;
     }
 
+    public Client() {
+        shares = new HashMap<>();
+        name = "TEST";
+        balance = 0;
+    }
+
     @Override
     // Simulate buying of stocks.
     public void run() {
-        testCases.buyAndSellHigh();
+        testCases.buyAndBuyLow();
     }
 
+    // Increase price when there's number of stocks hits a target.
     public void increasePrice(Company company) {
-        synchronized (lock) {
-            // Increase price when there's number of stocks hit a certain number.
-            if (company.getAvailableShares() == INCREASE_POINT) {
+        if (company.getAvailableShares() == TRIGGER_POINT) {
+            synchronized (lock) {
                 stockExchange.changePriceBy(company, (float) (company.getPrice() * INCREASE_FACTOR));
+                lock.notifyAll();
             }
-            lock.notifyAll();
+        }
+    }
+
+    // Decrease price when there's number of stocks hits a target.
+    public void decreasePrice(Company company) {
+        if (company.getAvailableShares() == TRIGGER_POINT) {
+            synchronized (lock) {
+                stockExchange.changePriceBy(company, (float) (company.getPrice() * DECREASE_FACTOR));
+                lock.notifyAll();
+            }
         }
     }
 
@@ -97,13 +114,15 @@ public class Client implements Runnable {
         synchronized (lock) {
             while(company.getPrice() > limit) {
                 try {
-                    wait();
+                    lock.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
             boolean isBought = buy(company, numberOfShares);
-            System.out.println(isBought? name + " auto-bought " + company.getName(): name + " failed to auto-buy " + company.getName());
+            System.out.println(isBought
+                    ? name + " auto-bought " + company.getName()
+                    : name + " failed to auto-buy " + company.getName());
             return isBought;
         }
     }
@@ -183,7 +202,7 @@ public class Client implements Runnable {
 
         // Expected output is 1, provided there's only 2 clients, else output is numClients - 1.
         private void buyAndSellHigh() {
-            System.out.println(name + "'s thread started.");
+            System.out.println(name + "'s thread started for buy and sell high.");
             for (Company company : shares.keySet()) {
                 // John keeps buying shares while Lawrence wait for sellHigh.
                 if (name.equals("John")) {
@@ -193,6 +212,22 @@ public class Client implements Runnable {
                     }
                 } else {
                     sellHigh(company, 1, (float) INCREASE_FACTOR);
+                }
+            }
+        }
+
+        // Expected output is 1 with 3 clients.
+        private void buyAndBuyLow() {
+            System.out.println(name + "'s thread started for buy and sell low.");
+            for (Company company : shares.keySet()) {
+                // John keeps buying shares while Lawrence wait for sellHigh.
+                if (name.equals("John")) {
+                    for (int i=0; i<99994; i++) {
+                        buy(company, 1);
+                        decreasePrice(company);
+                    }
+                } else {
+                    buyLow(company, 1, (float) 0.9);
                 }
             }
         }
