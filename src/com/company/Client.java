@@ -3,6 +3,10 @@ package com.company;
 import java.util.HashMap;
 
 public class Client implements Runnable {
+    private final int INCREASE_POINT = 80000;
+
+    private final int INCREASE_FACTOR = 80000;
+
     private StockExchange stockExchange;
 
     private HashMap<Company, Float> shares;
@@ -10,6 +14,8 @@ public class Client implements Runnable {
     private String name;
 
     private float balance;
+
+    private TestCases testCases = new TestCases();
 
     // Class level lock for sellHigh and buyLow.
     private static Object lock = new Object();
@@ -24,34 +30,16 @@ public class Client implements Runnable {
     @Override
     // Simulate buying of stocks.
     public void run() {
-        System.out.println(name + "'s thread started.");
-        for (Company company : shares.keySet()) {
-            // John buy more shares.
-            if (name.equals("John")) {
-                for (int i=0; i<1000; i++) {
-                    buy(company, 1);
-                    increasePrice(company);
-//                try {
-//                    int randomNum = (int) (Math.random() * 100);
-//                    Thread.sleep(randomNum);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                sell(company, 1);
-                }
-            } else {
-                sellHigh(company, 1, (float) 1.3);
-            }
-        }
+        testCases.buyAndSellHigh();
     }
 
     public void increasePrice(Company company) {
         synchronized (lock) {
             // Increase price when there's number of stocks hit a certain number.
-            if (company.getAvailableShares() == 10) {
-                stockExchange.changePriceBy(company, company.getPrice() * 2);
-                lock.notifyAll();
+            if (company.getAvailableShares() == INCREASE_POINT) {
+                stockExchange.changePriceBy(company, (float) (company.getPrice() * INCREASE_FACTOR));
             }
+            lock.notifyAll();
         }
     }
 
@@ -71,33 +59,37 @@ public class Client implements Runnable {
         return false;
     }
 
-    public synchronized boolean buy(Company company, float numberOfShares) {
-        float availableShares = company.getAvailableShares();
-        float totalPrice = company.getPrice() * numberOfShares;
-        // Check if balance is enough and if company has enough shares.
-        if (balance >= totalPrice && availableShares >= numberOfShares) {
-            // Update availableShares in company.
-            company.setAvailableShares(availableShares - numberOfShares);
-            // Update company in Hash Map.
-            if (shares.containsKey(company)) {
-                shares.put(company, shares.get(company) + numberOfShares);
-            } else {
-                shares.put(company, numberOfShares);
+    public boolean buy(Company company, float numberOfShares) {
+        synchronized (Client.class) {
+            float availableShares = company.getAvailableShares();
+            float totalPrice = company.getPrice() * numberOfShares;
+            // Check if balance is enough and if company has enough shares.
+            if (balance >= totalPrice && availableShares >= numberOfShares) {
+                // Update availableShares in company.
+                company.setAvailableShares(availableShares - numberOfShares);
+                // Update company in Hash Map.
+                if (shares.containsKey(company)) {
+                    shares.put(company, shares.get(company) + numberOfShares);
+                } else {
+                    shares.put(company, numberOfShares);
+                }
+                balance -= totalPrice;
+                return true;
             }
-            balance -= totalPrice;
-            return true;
+            return false;
         }
-        return false;
     }
 
-    public synchronized boolean sell(Company company, float numberOfShares) {
-        // Check if client has enough shares.
-        if (shares.get(company) >= numberOfShares) {
-            company.setAvailableShares(company.getAvailableShares() + numberOfShares);
-            balance += company.getPrice() * numberOfShares;
-            return true;
+    public boolean sell(Company company, float numberOfShares) {
+        synchronized (Client.class) {
+            // Check if client has enough shares.
+            if (shares.get(company) >= numberOfShares) {
+                company.setAvailableShares(company.getAvailableShares() + numberOfShares);
+                balance += company.getPrice() * numberOfShares;
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     // Buy the stock when its price hits the limit.
@@ -128,7 +120,9 @@ public class Client implements Runnable {
                 }
             }
             boolean isSold = sell(company, numberOfShares);
-            System.out.println(isSold ? name + " auto-sold " + company.getName() + " for " + company.getPrice() : name + " failed to auto-sell " + company.getName());
+            System.out.println(isSold
+                    ? name + " auto-sold " + company.getName() + " for " + company.getPrice()
+                    : name + " failed to auto-sell " + company.getName());
             return isSold;
         }
     }
@@ -147,5 +141,60 @@ public class Client implements Runnable {
             return true;
         }
         return false;
+    }
+
+    class TestCases {
+        // Expected output is 0.
+        private void simulateBuy() {
+            System.out.println(name + "'s thread started for buy.");
+            for (Company company : shares.keySet()) {
+                for (int i=0; i<49998; i++) {
+                    buy(company, 1);
+                }
+            }
+        }
+
+        // Expected output is 0.
+        private void sleepThenBuy() {
+            System.out.println(name + "'s thread started for sleep then buy.");
+            try {
+                int randomNum = (int) (Math.random() * 100);
+                Thread.sleep(randomNum);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            for (Company company : shares.keySet()) {
+                for (int i=0; i<49998; i++) {
+                    buy(company, 1);
+                }
+            }
+        }
+
+        // Expected output is 99998.
+        private void buyAndSell() {
+            System.out.println(name + "'s thread started for buy and sell.");
+            for (Company company : shares.keySet()) {
+                for (int i=0; i<49998; i++) {
+                    buy(company, 1);
+                    sell(company, 1);
+                }
+            }
+        }
+
+        // Expected output is 1, provided there's only 2 clients, else output is numClients - 1.
+        private void buyAndSellHigh() {
+            System.out.println(name + "'s thread started.");
+            for (Company company : shares.keySet()) {
+                // John keeps buying shares while Lawrence wait for sellHigh.
+                if (name.equals("John")) {
+                    for (int i=0; i<99998; i++) {
+                        buy(company, 1);
+                        increasePrice(company);
+                    }
+                } else {
+                    sellHigh(company, 1, (float) INCREASE_FACTOR);
+                }
+            }
+        }
     }
 }
