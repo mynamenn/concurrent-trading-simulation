@@ -58,7 +58,9 @@ public class StockExchange {
     }
 
     public synchronized void setPrice(Company company, float price) {
-        company.setPrice(price);
+        if (price >= 0) {
+            company.setPrice(price);
+        }
     }
 
     public synchronized void changePriceBy(Company company, float price) {

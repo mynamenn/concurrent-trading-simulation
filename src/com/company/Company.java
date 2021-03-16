@@ -17,7 +17,7 @@ public class Company {
     }
 
     public Company() {
-        name = "TEST";
+        name = "";
         totalNumberOfShares = 0;
         availableNumberOfShares = 0;
         price = 0;

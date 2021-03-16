@@ -35,7 +35,6 @@ public class Client implements Runnable {
     }
 
     @Override
-    // Simulate buying of stocks.
     public void run() {
         testCases.buyAndBuyLow();
     }
@@ -64,16 +63,9 @@ public class Client implements Runnable {
         return shares;
     }
 
-    // Instance level synchronization.
-    public synchronized boolean setStocks(Company company, float numberOfShares) {
-        // Check if company is in Hash Map.
-        if (!shares.containsKey(company)) {
-            shares.put(company, numberOfShares);
-            return true;
-        } else if (shares.get(company) == 0) {
-            return true;
-        }
-        return false;
+    public synchronized void setStocks(Company company, float numberOfShares) {
+        shares.put(company, numberOfShares);
+        company.setAvailableShares(numberOfShares);
     }
 
     public boolean buy(Company company, float numberOfShares) {
@@ -82,14 +74,7 @@ public class Client implements Runnable {
             float totalPrice = company.getPrice() * numberOfShares;
             // Check if balance is enough and if company has enough shares.
             if (balance >= totalPrice && availableShares >= numberOfShares) {
-                // Update availableShares in company.
-                company.setAvailableShares(availableShares - numberOfShares);
-                // Update company in Hash Map.
-                if (shares.containsKey(company)) {
-                    shares.put(company, shares.get(company) + numberOfShares);
-                } else {
-                    shares.put(company, numberOfShares);
-                }
+                setStocks(company, availableShares - numberOfShares);
                 balance -= totalPrice;
                 return true;
             }
@@ -101,7 +86,7 @@ public class Client implements Runnable {
         synchronized (Client.class) {
             // Check if client has enough shares.
             if (shares.get(company) >= numberOfShares) {
-                company.setAvailableShares(company.getAvailableShares() + numberOfShares);
+                setStocks(company, company.getAvailableShares() + numberOfShares);
                 balance += company.getPrice() * numberOfShares;
                 return true;
             }
@@ -146,13 +131,11 @@ public class Client implements Runnable {
         }
     }
 
-    // Instance level synchronization.
     public synchronized boolean deposit(float amount) {
         balance += amount;
         return true;
     }
 
-    // Instance level synchronization.
     public synchronized boolean withdraw(float amount) {
         // Check if balance is >= amount.
         if (balance >= amount) {
@@ -167,7 +150,7 @@ public class Client implements Runnable {
         private void simulateBuy() {
             System.out.println(name + "'s thread started for buy.");
             for (Company company : shares.keySet()) {
-                for (int i=0; i<49998; i++) {
+                for (int i=0; i<49999; i++) {
                     buy(company, 1);
                 }
             }
@@ -183,7 +166,7 @@ public class Client implements Runnable {
                 e.printStackTrace();
             }
             for (Company company : shares.keySet()) {
-                for (int i=0; i<49998; i++) {
+                for (int i=0; i<49999; i++) {
                     buy(company, 1);
                 }
             }
@@ -193,7 +176,7 @@ public class Client implements Runnable {
         private void buyAndSell() {
             System.out.println(name + "'s thread started for buy and sell.");
             for (Company company : shares.keySet()) {
-                for (int i=0; i<49998; i++) {
+                for (int i=0; i<49999; i++) {
                     buy(company, 1);
                     sell(company, 1);
                 }

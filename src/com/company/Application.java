@@ -3,7 +3,7 @@ package com.company;
 import java.util.HashMap;
 
 public class Application {
-    public static void simulate2SellHigh() throws InterruptedException {
+    public static void simulate3BuyLow() throws InterruptedException {
         StockExchange stockExchange = new StockExchange();
         Company google = new Company("Google", 100000, 100000, 1);
         Client lawrence = new Client("Lawrence", 1000000000, stockExchange);
@@ -74,6 +74,6 @@ public class Application {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        simulate2SellHigh();
+        simulate3BuyLow();
     }
 }
