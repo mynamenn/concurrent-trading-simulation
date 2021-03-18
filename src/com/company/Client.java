@@ -19,7 +19,11 @@ public class Client implements Runnable {
 
     private TestCases testCases = new TestCases();
 
+    // Class level lock for buy and sell.
     private static Object lock = new Object();
+
+    // Class level lock for sellHigh and buyLow.
+    private static Object triggerLock = new Object();
 
     public Client(String name, float balance, StockExchange stockExchange) {
         shares = new HashMap<>();
@@ -69,7 +73,7 @@ public class Client implements Runnable {
     }
 
     public boolean buy(Company company, float numberOfShares) {
-        synchronized (Client.class) {
+        synchronized (lock) {
             float availableShares = company.getAvailableShares();
             float totalPrice = company.getPrice() * numberOfShares;
             // Check if balance is enough and if company has enough shares.
@@ -83,7 +87,7 @@ public class Client implements Runnable {
     }
 
     public boolean sell(Company company, float numberOfShares) {
-        synchronized (Client.class) {
+        synchronized (lock) {
             // Check if client has enough shares.
             if (shares.get(company) >= numberOfShares) {
                 setStocks(company, company.getAvailableShares() + numberOfShares);
@@ -96,10 +100,10 @@ public class Client implements Runnable {
 
     // Buy the stock when its price hits the limit.
     public boolean buyLow(Company company, float numberOfShares, float limit) {
-        synchronized (lock) {
+        synchronized (triggerLock) {
             while(company.getPrice() > limit) {
                 try {
-                    lock.wait();
+                    triggerLock.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -114,11 +118,11 @@ public class Client implements Runnable {
 
     // Sell the stock when its price hits the limit.
     public boolean sellHigh(Company company, float numberOfShares, float limit) {
-        synchronized (lock) {
+        synchronized (triggerLock) {
             System.out.println(name + " created sellHigh for " + company.getName() + ": " + limit);
             while (company.getPrice() < limit) {
                 try {
-                    lock.wait();
+                    triggerLock.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
