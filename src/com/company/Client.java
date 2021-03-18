@@ -36,7 +36,7 @@ public class Client implements Runnable {
 
     @Override
     public void run() {
-        testCases.buyAndBuyLow();
+        testCases.demoApplication();
     }
 
     // Increase price when there's number of stocks hits a target.
@@ -202,6 +202,36 @@ public class Client implements Runnable {
         // Expected output is 1 with 3 clients.
         private void buyAndBuyLow() {
             System.out.println(name + "'s thread started for buy and sell low.");
+            for (Company company : shares.keySet()) {
+                // John keeps buying shares while Lawrence wait for sellHigh.
+                if (name.equals("John")) {
+                    for (int i=0; i<99994; i++) {
+                        buy(company, 1);
+                        decreasePrice(company);
+                    }
+                } else {
+                    buyLow(company, 1, (float) 0.9);
+                }
+            }
+        }
+
+        private void demoApplication() {
+            System.out.println(name + "'s thread started for demo application.");
+            System.out.println(name + " buying and selling shares.");
+            // Test for race condition.
+            for (Company company : shares.keySet()) {
+                for (int i=0; i<49999; i++) {
+                    buy(company, 1);
+                    sell(company, 1);
+                }
+            }
+            if (name.equals("John")) {
+                System.out.println("John is buying shares.");
+            } else {
+                System.out.println(name + " calling buyLow except for John who is buying shares.");
+            }
+
+            // Test buyLow.
             for (Company company : shares.keySet()) {
                 // John keeps buying shares while Lawrence wait for sellHigh.
                 if (name.equals("John")) {
